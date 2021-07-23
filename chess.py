@@ -35,9 +35,7 @@ class Pawn:
 
 class Knight(Pawn):
     def __init__(self, row, col, color):
-        self.row = row
-        self.col = col
-        self.color = color
+        super().__init__(row, col, color)
         self.char = "N"
 
     def can_move(self, row, col, f):
