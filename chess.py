@@ -137,10 +137,12 @@ class King(Pawn):
                 (0 <= col <= 7 and 0 <= row <= 7):
             return True
         if self.can_do_rook_step:
-            if row == 6 and f[self.row][7].char == "R" and f[self.row][7].color == self.color and f[self.row][7].can_do_rook_step and f[self.row][5] == None: # также проверить, не находятся ли поля, задействованные в рокировке, под боем
+            if row == 6 and f[self.row][7].char == "R" and f[self.row][7].color == self.color and\
+                    f[self.row][7].can_do_rook_step and f[self.row][5] == None: # также проверить, не находятся ли поля, задействованные в рокировке, под боем
                 f.move_piece(self.row, 7, self.row, 5)
                 return True
-            if row == 2 and f[self.row][0].char == "R" and f[self.row][0].color == self.color and f[self.row][0].can_do_rook_step and f[self.row][3] == None: # также проверить, не находятся ли поля, задействованные в рокировке, под боем
+            if row == 2 and f[self.row][0].char == "R" and f[self.row][0].color == self.color and\
+                    f[self.row][0].can_do_rook_step and f[self.row][3] == None and f[self.row][1] == None: # также проверить, не находятся ли поля, задействованные в рокировке, под боем
                 f.move_piece(self.row, 0, self.row, 3)
                 return True
         return False
