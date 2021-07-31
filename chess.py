@@ -22,7 +22,7 @@ class Pawn:
         self.row = row
         self.col = col
 
-    def can_move(self, row, col, f):
+    def can_move(self, row, col, f, b_a_l, w_a_l):
         if (self.row + self.direction == row) or \
                 (self.row == self.start_row and self.row + 2 * self.direction == row):
             if 0 <= col <= 7 and 0 <= row <= 7:
@@ -32,13 +32,20 @@ class Pawn:
                     return True
         return False
 
+    def can_eat(self, row, col, f):
+        if 0 <= col <= 7 and 0 <= row <= 7:
+            if row == self.row + self.direction and (col == self.col - 1 or col == self.col + 1):
+                return True
+        return False
+
+
 
 class Knight(Pawn):
     def __init__(self, row, col, color):
         super().__init__(row, col, color)
         self.char = "N"
 
-    def can_move(self, row, col, f):
+    def can_move(self, row, col, f, b_a_l, w_a_l):
         a = abs(row - self.row)
         b = abs(col - self.col)
         if ((a == 1 and b == 2) or (b == 1 and a == 2)) and \
@@ -52,7 +59,7 @@ class Queen(Pawn):
         super().__init__(row, col, color)
         self.char = "Q"
 
-    def can_move(self, row, col, f):
+    def can_move(self, row, col, f, b_a_l, w_a_l):
         a = abs(row - self.row)
         b = abs(col - self.col)
         if self.char == "Q" or self.char == "B":
@@ -130,20 +137,11 @@ class King(Pawn):
         self.char = "K"
         self.can_do_rook_step = True
 
-    def can_move(self, row, col, f):
-        a = abs(row - self.row)
-        b = abs(col - self.col)
-        if a <= 1 and b <= 1 and \
-                (0 <= col <= 7 and 0 <= row <= 7):
-            return True
-        if self.can_do_rook_step:
-            if row == 6 and f[self.row][7].char == "R" and f[self.row][7].color == self.color and\
-                    f[self.row][7].can_do_rook_step and f[self.row][5] == None: # также проверить, не находятся ли поля, задействованные в рокировке, под боем
-                f.move_piece(self.row, 7, self.row, 5)
-                return True
-            if row == 2 and f[self.row][0].char == "R" and f[self.row][0].color == self.color and\
-                    f[self.row][0].can_do_rook_step and f[self.row][3] == None and f[self.row][1] == None: # также проверить, не находятся ли поля, задействованные в рокировке, под боем
-                f.move_piece(self.row, 0, self.row, 3)
+    def can_move(self, row, col, f, b_a_l, w_a_l):
+        if not ((self.color == WHITE and ([self.row, self.col] in b_a_l or [row, col] in b_a_l)) or (self.color == BLACK and ([self.row, self.col] in w_a_l or [row, col] in w_a_l))):
+            a = abs(row - self.row)
+            b = abs(col - self.col)
+            if (a <= 1 and b <= 1 and (0 <= col <= 7 and 0 <= row <= 7)) or (a == 0 and b == 2 and self.can_do_rook_step):
                 return True
         return False
 
@@ -206,9 +204,9 @@ class Board:
             return False
         if not piece:
             return False
-        if not self.field[row][col].can_move(row1, col1, self.field):
+        if not self.field[row][col].can_move(row1, col1, self.field, self.black_atack_list, self.white_atack_list):
             return False
-        if self.field[row][col].can_move(row1, col1, self.field):
+        if self.field[row][col].can_move(row1, col1, self.field, self.black_atack_list, self.white_atack_list):
             if self.field[row1][col1]:
                 if self.field[row1][col1].color == actual_color:
                     return False
@@ -218,23 +216,46 @@ class Board:
                     self.black_eaten.append(self.field[row1][col1].__class__.__name__)
                 else:
                     self.white_eaten.append(self.field[row1][col1].__class__.__name__)
+
+        """Странный код рокировки, который очень плохо написан, но должен работать"""
+        if piece.char == "K":
+            if piece.can_do_rook_step:
+                if col1 == 6:
+                    if self.field[row][7].char == "R" and self.field[row][7].can_do_rook_step and self.field[row][5] == None and self.field[row][6] == None:
+                        if piece.color == WHITE and not [0, 5] in self.black_atack_list and not [0, 6] in self.black_atack_list:
+                            self.field[row][7].set_position(0, 5)
+                            self.field[row][5] = self.field[row][7]
+                            self.field[row][7] = None
+                        elif piece.color == BLACK and not [7, 5] in self.white_atack_list and not [7, 6] in self.white_atack_list:
+                            self.field[row][7].set_position(7, 5)
+                            self.field[row][5] = self.field[row][7]
+                            self.field[row][7] = None
+                        else:
+                            return False
+                    else:
+                        return False
+                if col == 2:
+                    if self.field[row][0].char == "R" and self.field[row][0].can_do_rook_step and self.field[row][3] == None and self.field[row][2] == None and self.field[row][1] == None:
+                        if piece.color == WHITE and not [0, 3] in self.black_atack_list and not [0, 2] in self.black_atack_list and not [0, 1] in self.black_atack_list:
+                            self.field[row][0].set_position(0, 3)
+                            self.field[row][3] = self.field[row][0]
+                            self.field[row][0] = None
+                        elif self.color == BLACK and not [7, 3] in self.white_atack_list and not [7, 2] in self.white_atack_list and not [7, 1] in self.white_atack_list:
+                            self.field[row][0].set_position(7, 3)
+                            self.field[row][3] = self.field[row][0]
+                            self.field[row][0] = None
+                        else:
+                            return False
+                    else:
+                        return False
+
         self.field[row][col] = None
         self.field[row1][col1] = piece
-        piece.set_position(row1, col1)
+        self.field[row1][col1].set_position(row1, col1)
+
         if self.field[row1][col1].char == "K" or self.field[row1][col1].char == "R":
             self.field[row1][col1].can_do_rook_step = False
         return True
-
-    def is_under_attack(self, row, col, color):
-        solutin_list = []
-        for elem in self.field:
-            for el in elem:
-                if el:
-                    if el.color() == color:
-                        solutin_list.append(el.can_move(row, col))
-        if any(solutin_list):
-            return True
-        return False
 
 
 def opponent(color):
@@ -258,8 +279,7 @@ def print_board(board):  # Распечатать доску в текстово
     print(out_string)
 
 
-
-def chess_action():#
+def chess_action():  #
     global actual_color
     # Создаём шахматную доску
     board = Board()
@@ -268,6 +288,39 @@ def chess_action():#
     while not game_stoped:
         # Выводим положение фигур на доске
         print_board(board)
+        """Механика битых болей была введена для ограничения возможностей короля и упрощения постановки мата"""
+        # Мы перебираем все клетки существующего перед ходом поля
+        board.white_atack_list = []
+        board.black_atack_list = []
+        for i in range(8):
+            for j in range(8):
+                # И рассматриваем их, если они представляют собой фигуры
+                point = board.field[i][j]
+                if point:
+                    # После чего записываем в соответсттвующие списки все битые поля
+                    if point.color == WHITE:
+                        for i1 in range(8):
+                            for j1 in range(8):
+                                # При помощи метода can_move или can_eat
+                                if point.char == "P":
+                                    if point.can_eat(i1, j1, board.field) and [i1, j1] not in board.white_atack_list:
+                                        board.white_atack_list.append([i1, j1])
+                                else:
+                                    if point.can_move(i1, j1, board.field, board.black_atack_list, board.white_atack_list) and [i1, j1] not in board.white_atack_list:
+                                        board.white_atack_list.append([i1, j1])
+                    elif point.color == BLACK:
+                        for i1 in range(8):
+                            for j1 in range(8):
+                                if point.char == "P":
+                                    if point.can_eat(i1, j1, board.field) and [i1, j1] not in board.black_atack_list:
+                                        board.black_atack_list.append([i1, j1])
+                                else:
+                                    if point.can_move(i1, j1, board.field, board.black_atack_list, board.white_atack_list) and [i1, j1] not in board.black_atack_list:
+                                        board.black_atack_list.append([i1, j1])
+
+        print(board.white_atack_list)
+        print(board.black_atack_list)
+
         # Подсказка по командам
         print('Команды:')
         print('    exit                               -- выход')
@@ -283,6 +336,7 @@ def chess_action():#
             break
         move_type, row, col, row1, col1 = command.split()
         row, col, row1, col1 = int(row), int(col), int(row1), int(col1)
+
         if board.move_piece(row, col, row1, col1):
             print('Ход успешен')
             print(f"Потери белых: {board.white_eaten}")
@@ -290,5 +344,6 @@ def chess_action():#
             actual_color = opponent(actual_color)
         else:
             print('Координаты некорректы! Попробуйте другой ход!')
+
 
 chess_action()

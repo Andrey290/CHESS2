@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f7d59f61-4c85-4937-a419-e792a3f25128" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chess.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -43,7 +44,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.chess (1)">
+  <component name="RunManager" selected="Python.chess">
     <configuration name="chess (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="CHESS" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -88,8 +89,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.chess (1)" />
         <item itemvalue="Python.chess" />
+        <item itemvalue="Python.chess (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -133,7 +134,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
